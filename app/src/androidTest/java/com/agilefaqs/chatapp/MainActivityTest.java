@@ -38,6 +38,7 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
     public void testViewsCreated() {
         assertNotNull(getActivity());
         assertNotNull(mMessageText);
+        assertNotNull(mSendButton);
     }
 
     @SmallTest
@@ -48,7 +49,7 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
 
     @SmallTest
     public void testStartingEmpty() {
-        assertTrue("Message filed is empty", !"".equals(mSendButton.getText().toString()));
+        assertTrue("Message filed is empty", !"".equals(mMessageText.getText().toString()));
         assertTrue("Send button is enable", !mSendButton.isEnabled() && mSendButton.isClickable());
     }
 
@@ -57,7 +58,7 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
         mActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mSendButton.setText("");
+                mMessageText.setText("");
             }
         });
 
@@ -69,9 +70,10 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
         mActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mSendButton.setText("Hi");
+                mMessageText.setText("Hi");
             }
         });
         assertTrue("Send button is enable", mSendButton.isEnabled() && mSendButton.isClickable());
     }
+
 }

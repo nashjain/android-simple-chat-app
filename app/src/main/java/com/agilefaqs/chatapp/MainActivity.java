@@ -167,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 protected void onPostExecute(List<String> m) {
-                    if (messages != null) {
+                    if (m != null) {
                         messages = m;
                         messagesAdaptor.notifyDataSetChanged();
                         messagesList.scrollToPosition(messagesAdaptor.getItemCount()-1);
