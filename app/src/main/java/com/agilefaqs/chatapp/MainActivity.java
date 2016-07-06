@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView.Adapter<ViewHolder> messagesAdaptor;
     private RecyclerView messagesList;
     private List<String> messages;
-
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,12 +50,12 @@ public class MainActivity extends AppCompatActivity {
                 View itemView = LayoutInflater.from(getApplicationContext()).inflate(R.layout.list_item_message, parent, false);
                 return new ViewHolder(itemView);
             }
-
+            
             @Override
             public void onBindViewHolder(ViewHolder holder, int position) {
                 holder.messageTextView.setText(messages.get(position));
             }
-
+            
             @Override
             public int getItemCount() {
                 return messages.size();
@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
                     new AsyncTask<HttpURLConnection, Object, Boolean>() {
                         @Override
                         protected Boolean doInBackground(HttpURLConnection... params) {
-
+                            
                             try {
                                 InputStream in = params[0].getInputStream();
                                 InputStreamReader isw = new InputStreamReader(in);
@@ -98,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                             return true;
                         }
-
+                        
                         @Override
                         protected void onPostExecute(Boolean status) {
                             if (status) {
@@ -127,68 +127,70 @@ public class MainActivity extends AppCompatActivity {
             }
         }, SECONDS.toMillis(1), SECONDS.toMillis(10));
     }
-
+    
     @Override
     protected void onResume() {
         super.onResume();
         downloadMessages();
     }
-
+    
     private void downloadMessages() {
         HttpURLConnection urlConnection = null;
         try {
             URL url = new URL("http://192.168.1.33:4567/fetchAllMessages");
             urlConnection = (HttpURLConnection) url.openConnection();
-            new AsyncTask<HttpURLConnection, Object, List<String>>() {
-                @Override
-                protected List<String> doInBackground(HttpURLConnection... params) {
-
-                    List<String> messages = null;
-                    try {
-                        InputStream in = params[0].getInputStream();
-                        InputStreamReader isw = new InputStreamReader(in);
-                        StringBuilder buffer = new StringBuilder();
-                        int data;
-                        data = isw.read();
-                        while (data != -1) {
-                            char c = (char) data;
-                            buffer.append(c);
-                            System.out.print(c);
-                            data = isw.read();
-                        }
-                        Type type = new TypeToken<List<String>>() {
-                        }.getType();
-                        messages = new Gson().fromJson(buffer.toString(), type);
-                    } catch (Exception e) {
-                        Log.e("", e.getMessage(), e);
-                    }
-                    return messages;
-                }
-
-                @Override
-                protected void onPostExecute(List<String> m) {
-                    if (messages != null) {
-                        messages = m;
-                        messagesAdaptor.notifyDataSetChanged();
-                        messagesList.scrollToPosition(messagesAdaptor.getItemCount()-1);
-                    } else {
-                        Toast.makeText(MainActivity.this, "Could not fetch messages", Toast.LENGTH_SHORT).show();
-                    }
-                }
-            }.execute(urlConnection);
+            new ReturnMessagesInAsync().execute(urlConnection);
         } catch (Exception e) {
             Log.e("", e.getMessage(), e);
         } finally {
             urlConnection.disconnect();
         }
     }
-
+    
     static class ViewHolder extends RecyclerView.ViewHolder {
         private final TextView messageTextView;
-
+        
         public ViewHolder(View itemView) {
             super(itemView);
             messageTextView = (TextView) itemView.findViewById(R.id.message);
         }
     }
-}
+    
+    private class ReturnMessagesInAsync extends AsyncTask<HttpURLConnection,Object,List<String>>{
+        
+        @Override
+        protected List<String> doInBackground(HttpURLConnection... params) {
+            
+            List<String> messages = null;
+            try {
+                InputStream in = params[0].getInputStream();
+                InputStreamReader isw = new InputStreamReader(in);
+                StringBuilder buffer = new StringBuilder();
+                int data;
+                data = isw.read();
+                while (data != -1) {
+                    char c = (char) data;
+                    buffer.append(c);
+                    System.out.print(c);
+                    data = isw.read();
+                }
+                Type type = new TypeToken<List<String>>() {
+                }.getType();
+                messages = new Gson().fromJson(buffer.toString(), type);
+            } catch (Exception e) {
+                Log.e("", e.getMessage(), e);
+            }
+            return messages;
+        }
+        
+        @Override
+        protected void onPostExecute(List<String> m) {
+            if (messages != null) {
+                messages = m;
+                messagesAdaptor.notifyDataSetChanged();
+                messagesList.scrollToPosition(messagesAdaptor.getItemCount()-1);
+            } else {
+                Toast.makeText(MainActivity.this, "Could not fetch messages", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
