@@ -49,8 +49,8 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
 
     @SmallTest
     public void testStartingEmpty() {
-        assertTrue("Message filed is empty", !"".equals(mMessageText.getText().toString()));
-        assertTrue("Send button is enable", !mSendButton.isEnabled() && mSendButton.isClickable());
+        assertTrue("Message filed is empty", "".equals(mMessageText.getText().toString()));
+        assertTrue("Send button is enable", !mSendButton.isEnabled() && !mSendButton.isClickable());
     }
 
     @SmallTest
@@ -62,7 +62,7 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
             }
         });
 
-        assertTrue("Send button is enable", !mSendButton.isEnabled() && mSendButton.isClickable());
+        assertTrue("Send button is enable", !mSendButton.isEnabled() && !mSendButton.isClickable());
     }
 
     @SmallTest
