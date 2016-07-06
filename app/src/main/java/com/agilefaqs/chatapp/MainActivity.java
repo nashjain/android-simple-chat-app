@@ -140,7 +140,7 @@ public class MainActivity extends AppCompatActivity implements DownloadMessageIn
         downloadMessages();
     }
 
-    public void downloadMessages() {
+    private void downloadMessages() {
         HttpURLConnection urlConnection = null;
         try {
             URL url = new URL("http://192.168.1.33:4567/fetchAllMessages");
