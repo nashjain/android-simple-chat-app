@@ -27,13 +27,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
-
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+    private static final TimeUnit SECONDS = TimeUnit.SECONDS;
     private RecyclerView.Adapter<ViewHolder> messagesAdaptor;
     private RecyclerView messagesList;
     private List<String> messages;
+    private EditText messageInput = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
         final LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         messagesList.setLayoutManager(layoutManager);
         messagesList.addItemDecoration(new DividerItemDecoration(this));
-        messagesAdaptor = new RecyclerView.Adapter<ViewHolder>(){
+        messagesAdaptor = new RecyclerView.Adapter<ViewHolder>() {
             @Override
             public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
                 View itemView = LayoutInflater.from(getApplicationContext()).inflate(R.layout.list_item_message, parent, false);
@@ -62,70 +63,9 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         messagesList.setAdapter(messagesAdaptor);
-        final EditText messageInput = (EditText) findViewById(R.id.messageInput);
+        messageInput = (EditText) findViewById(R.id.messageInput);
         Button sendButton = (Button) findViewById(R.id.sendButton);
-        sendButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                HttpURLConnection urlConnection = null;
-                try {
-                    String msg = messageInput.getText().toString();
-                    messages.add(msg);
-                    messagesAdaptor.notifyDataSetChanged();
-                    messagesList.scrollToPosition(messagesAdaptor.getItemCount()-1);
-                    URL url = new URL("http://192.168.1.33:4567/send?message=" + msg);
-                    urlConnection = (HttpURLConnection) url.openConnection();
-                    new AsyncTask<HttpURLConnection, Object, Boolean>() {
-                        @Override
-                        protected Boolean doInBackground(HttpURLConnection... params) {
-
-                            try {
-                                InputStream in = params[0].getInputStream();
-                                InputStreamReader isw = new InputStreamReader(in);
-                                StringBuffer buffer = new StringBuffer();
-                                int data    ;
-                                data = isw.read();
-                                while (data != -1) {
-                                    char c = (char) data;
-                                    buffer.append(c);
-                                    System.out.print(c);
-                                    data = isw.read();
-                                }
-                                Log.d("", buffer.toString());
-                            } catch (Exception e) {
-                                Log.e("", e.getMessage(), e);
-                                return false;
-                            }
-                            return true;
-                        }
-
-                        @Override
-                        protected void onPostExecute(Boolean status) {
-                            if (status) {
-                                messages.add(messageInput.getText().toString());
-                                messagesAdaptor.notifyDataSetChanged();
-                                messagesList.scrollToPosition(messagesAdaptor.getItemCount()-1);
-                                downloadMessages();
-                                messageInput.setText("");
-                                Toast.makeText(MainActivity.this, "Message sent", Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(MainActivity.this, "Message send failed", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    }.execute(urlConnection);
-                } catch (Exception e) {
-                    Log.e("", e.getMessage(), e);
-                } finally {
-                    urlConnection.disconnect();
-                }
-            }
-        });
-        new Timer().scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                downloadMessages();
-            }
-        }, SECONDS.toMillis(1), SECONDS.toMillis(10));
+        sendButton.setOnClickListener(this);
     }
 
     @Override
@@ -170,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
                     if (messages != null) {
                         messages = m;
                         messagesAdaptor.notifyDataSetChanged();
-                        messagesList.scrollToPosition(messagesAdaptor.getItemCount()-1);
+                        messagesList.scrollToPosition(messagesAdaptor.getItemCount() - 1);
                     } else {
                         Toast.makeText(MainActivity.this, "Could not fetch messages", Toast.LENGTH_SHORT).show();
                     }
@@ -183,6 +123,69 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onClick(View v) {
+        HttpURLConnection urlConnection = null;
+        try {
+            String msg = messageInput.getText().toString();
+            messages.add(msg);
+            messagesAdaptor.notifyDataSetChanged();
+            messagesList.scrollToPosition(messagesAdaptor.getItemCount() - 1);
+            URL url = new URL("http://192.168.1.33:4567/send?message=" + msg);
+            urlConnection = (HttpURLConnection) url.openConnection();
+            new AsyncTask<HttpURLConnection, Object, Boolean>() {
+                @Override
+                protected Boolean doInBackground(HttpURLConnection... params) {
+
+                    try {
+                        InputStream in = params[0].getInputStream();
+                        InputStreamReader isw = new InputStreamReader(in);
+                        StringBuffer buffer = new StringBuffer();
+                        int data;
+                        data = isw.read();
+                        while (data != -1) {
+                            char c = (char) data;
+                            buffer.append(c);
+                            System.out.print(c);
+                            data = isw.read();
+                        }
+                        Log.d("", buffer.toString());
+                    } catch (Exception e) {
+                        Log.e("", e.getMessage(), e);
+                        return false;
+                    }
+                    return true;
+                }
+
+                @Override
+                protected void onPostExecute(Boolean status) {
+                    if (status) {
+                        messages.add(messageInput.getText().toString());
+                        messagesAdaptor.notifyDataSetChanged();
+                        messagesList.scrollToPosition(messagesAdaptor.getItemCount() - 1);
+                        downloadMessages();
+                        messageInput.setText("");
+                        Toast.makeText(MainActivity.this, "Message sent", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(MainActivity.this, "Message send failed", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }.execute(urlConnection);
+        } catch (Exception e) {
+            Log.e("", e.getMessage(), e);
+        } finally {
+            urlConnection.disconnect();
+        }
+
+        new Timer().scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                downloadMessages();
+            }
+        }, SECONDS.toMillis(1), SECONDS.toMillis(10));
+    }
+
+
     static class ViewHolder extends RecyclerView.ViewHolder {
         private final TextView messageTextView;
 
@@ -190,5 +193,10 @@ public class MainActivity extends AppCompatActivity {
             super(itemView);
             messageTextView = (TextView) itemView.findViewById(R.id.message);
         }
+    }
+
+    public List<String> getAllMessages()
+    {
+        return messages;
     }
 }
