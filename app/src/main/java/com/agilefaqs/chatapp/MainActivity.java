@@ -28,6 +28,10 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class MainActivity extends AppCompatActivity {
@@ -64,62 +68,62 @@ public class MainActivity extends AppCompatActivity {
         messagesList.setAdapter(messagesAdaptor);
         final EditText messageInput = (EditText) findViewById(R.id.messageInput);
         Button sendButton = (Button) findViewById(R.id.sendButton);
-        sendButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                HttpURLConnection urlConnection = null;
-                try {
-                    String msg = messageInput.getText().toString();
-                    messages.add(msg);
-                    messagesAdaptor.notifyDataSetChanged();
-                    messagesList.scrollToPosition(messagesAdaptor.getItemCount()-1);
-                    URL url = new URL("http://192.168.1.33:4567/send?message=" + msg);
-                    urlConnection = (HttpURLConnection) url.openConnection();
-                    new AsyncTask<HttpURLConnection, Object, Boolean>() {
-                        @Override
-                        protected Boolean doInBackground(HttpURLConnection... params) {
+            sendButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    HttpURLConnection urlConnection = null;
+                    try {
+                        String msg = messageInput.getText().toString();
+                        messages.add(msg);
+                        messagesAdaptor.notifyDataSetChanged();
+                        messagesList.scrollToPosition(messagesAdaptor.getItemCount()-1);
+                        URL url = new URL("http://192.168.1.33:4567/send?message=" + msg);
+                        urlConnection = (HttpURLConnection) url.openConnection();
+                        new AsyncTask<HttpURLConnection, Object, Boolean>() {
+                            @Override
+                            protected Boolean doInBackground(HttpURLConnection... params) {
 
-                            try {
-                                InputStream in = params[0].getInputStream();
-                                InputStreamReader isw = new InputStreamReader(in);
-                                StringBuffer buffer = new StringBuffer();
-                                int data    ;
-                                data = isw.read();
-                                while (data != -1) {
-                                    char c = (char) data;
-                                    buffer.append(c);
-                                    System.out.print(c);
+                                try {
+                                    InputStream in = params[0].getInputStream();
+                                    InputStreamReader isw = new InputStreamReader(in);
+                                    StringBuffer buffer = new StringBuffer();
+                                    int data    ;
                                     data = isw.read();
+                                    while (data != -1) {
+                                        char c = (char) data;
+                                        buffer.append(c);
+                                        System.out.print(c);
+                                        data = isw.read();
+                                    }
+                                    Log.d("", buffer.toString());
+                                } catch (Exception e) {
+                                    Log.e("", e.getMessage(), e);
+                                    return false;
                                 }
-                                Log.d("", buffer.toString());
-                            } catch (Exception e) {
-                                Log.e("", e.getMessage(), e);
-                                return false;
+                                return true;
                             }
-                            return true;
-                        }
 
-                        @Override
-                        protected void onPostExecute(Boolean status) {
-                            if (status) {
-                                messages.add(messageInput.getText().toString());
-                                messagesAdaptor.notifyDataSetChanged();
-                                messagesList.scrollToPosition(messagesAdaptor.getItemCount()-1);
-                                downloadMessages();
-                                messageInput.setText("");
-                                Toast.makeText(MainActivity.this, "Message sent", Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(MainActivity.this, "Message send failed", Toast.LENGTH_SHORT).show();
+                            @Override
+                            protected void onPostExecute(Boolean status) {
+                                if (status) {
+                                    messages.add(messageInput.getText().toString());
+                                    messagesAdaptor.notifyDataSetChanged();
+                                    messagesList.scrollToPosition(messagesAdaptor.getItemCount()-1);
+                                    downloadMessages();
+                                    messageInput.setText("");
+                                    Toast.makeText(MainActivity.this, "Message sent", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(MainActivity.this, "Message send failed", Toast.LENGTH_SHORT).show();
+                                }
                             }
-                        }
-                    }.execute(urlConnection);
-                } catch (Exception e) {
-                    Log.e("", e.getMessage(), e);
-                } finally {
-                    urlConnection.disconnect();
+                        }.execute(urlConnection);
+                    } catch (Exception e) {
+                        Log.e("", e.getMessage(), e);
+                    } finally {
+                        urlConnection.disconnect();
+                    }
                 }
-            }
-        });
+            });
         new Timer().scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
@@ -190,5 +194,16 @@ public class MainActivity extends AppCompatActivity {
             super(itemView);
             messageTextView = (TextView) itemView.findViewById(R.id.message);
         }
+    }
+
+    class nestedTestClass{
+        @Rule
+        public ExpectedException thrown = ExpectedException.none();
+
+        @Test
+        public void shouldThrowNothing() {
+            downloadMessages();
+        }
+        
     }
 }
