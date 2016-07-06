@@ -9,6 +9,8 @@ import android.widget.Button;
 
 import com.confengine.chatapp.R;
 
+import dalvik.annotation.TestTarget;
+
 public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActivity> {
 
     private MainActivity mainActivity;
@@ -31,7 +33,7 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
         assertNotNull(sendButton);
     }
 
-    public void buttonTextVerification() {
+    public void testTextVerification() {
         assertEquals(buttonString, (String) sendButton.getText());
     }
 
