@@ -37,7 +37,7 @@ public class MainActivityTest extends ActivityUnitTestCase<MainActivity>{
         activity = launchActivity(context.getPackageName(),
                 MainActivity.class, null);
         getInstrumentation().waitForIdleSync();
-
+        Button sendButton = (Button) activity.findViewById(R.id.sendButton);
 //        activity = startActivity(new Intent(getInstrumentation().getTargetContext(), MainActivity.class), null, null);
         activity.downloadMessages();
         try {
@@ -45,7 +45,7 @@ public class MainActivityTest extends ActivityUnitTestCase<MainActivity>{
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        assertNotNull(new Object());
+        assertNotNull(sendButton);
     }
 
     @After
