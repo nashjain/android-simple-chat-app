@@ -30,10 +30,16 @@ import java.util.TimerTask;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements DownloadMessageInterface {
     private RecyclerView.Adapter<ViewHolder> messagesAdaptor;
     private RecyclerView messagesList;
     private List<String> messages;
+
+    public void setDownloadMessagesAsyncTask(DownloadMessagesAsyncTask downloadMessagesAsyncTask) {
+        this.downloadMessagesAsyncTask = downloadMessagesAsyncTask;
+    }
+
+    DownloadMessagesAsyncTask downloadMessagesAsyncTask  = new DownloadMessagesAsyncTask(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,53 +140,33 @@ public class MainActivity extends AppCompatActivity {
         downloadMessages();
     }
 
-    private void downloadMessages() {
+    public void downloadMessages() {
         HttpURLConnection urlConnection = null;
         try {
             URL url = new URL("http://192.168.1.33:4567/fetchAllMessages");
             urlConnection = (HttpURLConnection) url.openConnection();
-            new AsyncTask<HttpURLConnection, Object, List<String>>() {
-                @Override
-                protected List<String> doInBackground(HttpURLConnection... params) {
-
-                    List<String> messages = null;
-                    try {
-                        InputStream in = params[0].getInputStream();
-                        InputStreamReader isw = new InputStreamReader(in);
-                        StringBuilder buffer = new StringBuilder();
-                        int data;
-                        data = isw.read();
-                        while (data != -1) {
-                            char c = (char) data;
-                            buffer.append(c);
-                            System.out.print(c);
-                            data = isw.read();
-                        }
-                        Type type = new TypeToken<List<String>>() {
-                        }.getType();
-                        messages = new Gson().fromJson(buffer.toString(), type);
-                    } catch (Exception e) {
-                        Log.e("", e.getMessage(), e);
-                    }
-                    return messages;
-                }
-
-                @Override
-                protected void onPostExecute(List<String> m) {
-                    if (messages != null) {
-                        messages = m;
-                        messagesAdaptor.notifyDataSetChanged();
-                        messagesList.scrollToPosition(messagesAdaptor.getItemCount()-1);
-                    } else {
-                        Toast.makeText(MainActivity.this, "Could not fetch messages", Toast.LENGTH_SHORT).show();
-                    }
-                }
-            }.execute(urlConnection);
+            downloadMessagesAsyncTask.execute(urlConnection);
         } catch (Exception e) {
             Log.e("", e.getMessage(), e);
         } finally {
             urlConnection.disconnect();
         }
+    }
+
+    @Override
+    public boolean processDownloadedMessages(List<String> m) {
+        if (messages != null) {
+            messages = m;
+            messagesAdaptor.notifyDataSetChanged();
+            messagesList.scrollToPosition(messagesAdaptor.getItemCount()-1);
+        } else {
+            Toast.makeText(MainActivity.this, "Could not fetch messages", Toast.LENGTH_SHORT).show();
+        }
+        return true;
+    }
+
+    public List<String> getMessages() {
+        return messages;
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
