@@ -191,4 +191,8 @@ public class MainActivity extends AppCompatActivity {
             messageTextView = (TextView) itemView.findViewById(R.id.message);
         }
     }
+
+    public int getItemCount() {
+        return messages.size();
+    }
 }
